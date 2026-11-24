@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090c11"><meta name="description" content="100 free browser-based transcript, subtitle and text utilities for Kick VOD workflows.">
+<title>100 Creator Tools — Kick Transcriber</title>
+<style>
+:root{color-scheme:dark;--bg:#090c11;--panel:#121923;--line:#273344;--muted:#9ba9b9;--accent:#53e0a1;--blue:#8cbcff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 85% 0,#15332c 0,transparent 40%),var(--bg);color:#f4f7fb;font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{width:min(1160px,calc(100% - 28px));margin:28px auto 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.brand{color:var(--accent);font-size:12px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(34px,6vw,54px);line-height:1.04;letter-spacing:-.05em;margin:14px 0}p,.muted{color:var(--muted)}a{color:var(--blue)}.pill{display:inline-block;border:1px solid #285b47;border-radius:99px;padding:4px 10px;color:var(--accent);font-size:12px;font-weight:800}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}.toolbar input,.toolbar select,textarea{background:#090f17;border:1px solid var(--line);border-radius:10px;color:#fff;font:inherit;padding:12px}.toolbar input{flex:1;min-width:190px}.toolbar select{min-width:180px}
+.layout{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:16px;align-items:start}.panel{background:#121923ed;border:1px solid var(--line);border-radius:16px;padding:18px}.toolgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:75vh;overflow:auto}.tool{padding:11px;border:1px solid var(--line);border-radius:10px;background:#0c131d;color:#eef5fb;text-align:left;cursor:pointer;font:inherit}.tool:hover,.tool.active{border-color:var(--accent);background:#12251f}.tool small{display:block;color:var(--muted);font-size:11px}.editor{position:sticky;top:12px}label{display:block;font-weight:700;margin:12px 0 7px}textarea{width:100%;min-height:240px;resize:vertical;line-height:1.5}.buttons{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{padding:11px 14px;border:0;border-radius:9px;background:var(--accent);color:#07130e;font-weight:850;cursor:pointer}button.secondary{background:#202b39;color:#f3f7fb;border:1px solid #344357}.status{min-height:24px;margin-top:10px;color:var(--accent);font-size:13px}.counter{font-size:12px;color:var(--muted)}.notice{padding:12px;border:1px solid #35465a;border-radius:10px;background:#0c131d;font-size:12px;color:#b9c8d8;margin-top:14px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.editor{position:static}.toolgrid{max-height:420px;grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:420px){.toolgrid{grid-template-columns:1fr}}
+</style></head>
+<body><main>
+<div class="top"><div><div class="brand">Kick VOD Transcriber · Creator Toolkit</div><h1>100 useful tools.<br>One workspace.</h1><p>Free browser-based utilities for transcripts, captions, text cleanup and creator workflows.</p></div><span class="pill">100 TOOLS · LOCAL PROCESSING</span></div>
+<p><a href="/">← Back to transcriber</a></p>
+<div class="toolbar"><input id="search" type="search" placeholder="Search 100 tools…"><select id="category"><option value="all">All categories</option></select><span class="counter" id="count">100 tools</span></div>
+<div class="layout"><section class="panel"><div class="toolgrid" id="toolgrid"></div></section>
+<section class="panel editor"><div class="brand" id="group">SELECT A TOOL</div><h2 id="toolname">Choose a tool</h2><p class="muted" id="description">Select any tool from the list. Paste transcript text or load a TXT, SRT or VTT file.</p>
+<label for="input">Input</label><textarea id="input" placeholder="Paste transcript, subtitles, notes or text here…"></textarea>
+<div class="buttons"><button id="run">Run tool</button><button class="secondary" id="load">Load file</button><button class="secondary" id="clear">Clear</button><input id="file" type="file" accept=".txt,.srt,.vtt,.csv,.md" hidden></div>
+<label for="output">Output</label><textarea id="output" readonly placeholder="Your result will appear here…"></textarea>
+<div class="buttons"><button id="copy">Copy result</button><button class="secondary" id="download">Download result</button></div><div class="status" id="status" role="status"></div>
+<div class="notice">Privacy: these tools process the text in your browser. They do not upload your transcript. Translation, speech recognition, AI summaries and audio/video extraction require separate models or service connections and are not falsely presented as offline features.</div>
+</section></div></main>
+<script>
+const raw = [
+["Transcript cleaner","Transcript cleanup","clean"],["Remove filler words","Transcript cleanup","fillers"],["Remove repeated words","Transcript cleanup","repeat"],["Remove blank lines","Transcript cleanup","blank"],["Normalize whitespace","Transcript cleanup","space"],["Fix punctuation spacing","Transcript cleanup","punctspace"],["Convert to sentence case","Transcript cleanup","sentence"],["Convert to title case","Transcript cleanup","title"],["Convert to uppercase","Transcript cleanup","upper"],["Convert to lowercase","Transcript cleanup","lower"],
+["Word counter","Text analysis","words"],["Character counter","Text analysis","chars"],["Sentence counter","Text analysis","sentences"],["Paragraph counter","Text analysis","paragraphs"],["Reading time estimator","Text analysis","reading"],["Speaking time estimator","Text analysis","speaking"],["Longest words finder","Text analysis","longwords"],["Most used words","Text analysis","frequent"],["Keyword extractor","Text analysis","keywords"],["Duplicate line finder","Text analysis","duplicates"],
+["Sort lines A–Z","Text formatting","sortaz"],["Sort lines Z–A","Text formatting","sortza"],["Reverse line order","Text formatting","reverse"],["Number lines","Text formatting","number"],["Remove line numbers","Text formatting","unnumber"],["Join lines","Text formatting","join"],["Split long lines","Text formatting","split"],["Add blank line between lines","Text formatting","spacelines"],["Remove punctuation","Text formatting","nopunct"],["Keep only alphanumeric","Text formatting","alnum"],
+["SRT to plain text","Subtitle tools","srttext"],["VTT to plain text","Subtitle tools","vtttext"],["Plain text to SRT","Subtitle tools","textsrt"],["Plain text to VTT","Subtitle tools","textvtt"],["SRT to VTT","Subtitle tools","srtvtt"],["VTT to SRT","Subtitle tools","vttsrt"],["Validate SRT timestamps","Subtitle tools","validsrt"],["Shift SRT timestamps +1s","Subtitle tools","shiftplus"],["Shift SRT timestamps -1s","Subtitle tools","shiftminus"],["Extract subtitle timestamps","Subtitle tools","timestamps"],
+["Merge short subtitle lines","Caption editing","mergeshort"],["Split long caption lines","Caption editing","splitcaption"],["Remove empty captions","Caption editing","emptycaps"],["Renumber SRT captions","Caption editing","renumber"],["Format caption text","Caption editing","capformat"],["Add speaker labels","Caption editing","speaker"],["Remove speaker labels","Caption editing","nospeaker"],["Convert tabs to spaces","Caption editing","tabs"],["Trim caption edges","Caption editing","trimcaps"],["Count caption blocks","Caption editing","capcount"],
+["Extract questions","Content insights","questions"],["Extract sentences with numbers","Content insights","numbers"],["Extract URLs","Content insights","urls"],["Extract email addresses","Content insights","emails"],["Extract hashtags","Content insights","hashtags"],["Extract @mentions","Content insights","mentions"],["Create bullet summary","Content insights","bullets"],["Create chapter headings","Content insights","chapters"],["Find repeated phrases","Content insights","phrases"],["Generate content outline","Content insights","outline"],
+["Remove timestamps","Transcript utilities","notimes"],["Convert timestamps to seconds","Transcript utilities","toseconds"],["Convert seconds to timestamps","Transcript utilities","tostamps"],["Add timestamps every minute","Transcript utilities","minute"],["Extract first 30 seconds","Transcript utilities","first30"],["Extract last 30 seconds","Transcript utilities","last30"],["Split transcript into chunks","Transcript utilities","chunks"],["Create quote list","Transcript utilities","quotes"],["Create show notes","Transcript utilities","shownotes"],["Create social post draft","Transcript utilities","social"],
+["CSV to text","File conversion","csvtext"],["Text to CSV rows","File conversion","textcsv"],["Text to Markdown","File conversion","markdown"],["Markdown to plain text","File conversion","mdplain"],["Escape HTML","File conversion","html"],["Unescape HTML","File conversion","unhtml"],["Encode URL text","File conversion","urlencode"],["Decode URL text","File conversion","urldecode"],["Base64 encode text","File conversion","b64encode"],["Base64 decode text","File conversion","b64decode"],
+["Redact email addresses","Privacy tools","redactemail"],["Redact phone-like numbers","Privacy tools","redactphone"],["Redact URLs","Privacy tools","redacturl"],["Remove personal-looking IDs","Privacy tools","redactids"],["Mask usernames","Privacy tools","maskuser"],["Remove profanity placeholders","Privacy tools","profanity"],["Anonymize speaker names","Privacy tools","anon"],["Remove quoted text","Privacy tools","quotesremove"],["Remove bracketed notes","Privacy tools","brackets"],["Remove parenthetical notes","Privacy tools","parentheses"],
+["Compare two text sections","Compare & quality","compare"],["Find missing punctuation","Compare & quality","punctcheck"],["Detect all-caps lines","Compare & quality","caps"],["Detect very long sentences","Compare & quality","longsent"],["Find repeated sentences","Compare & quality","repeatsent"],["Estimate subtitle CPS","Compare & quality","cps"],["Estimate subtitle reading speed","Compare & quality","speed"],["Check timestamp order","Compare & quality","order"],["Find possible transcription gaps","Compare & quality","gaps"],["Create transcript quality report","Compare & quality","report"]
+];
+const tools=raw.map((x,i)=>({id:i+1,name:x[0],category:x[1],op:x[2]}));
+const $=s=>document.querySelector(s);let selected=tools[0];
+const categories=[...new Set(tools.map(t=>t.category))];categories.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;$("#category").append(o)});
+function render(){const q=$("#search").value.toLowerCase(),c=$("#category").value;const list=tools.filter(t=>(c==="all"||t.category===c)&&(t.name.toLowerCase().includes(q)||t.category.toLowerCase().includes(q)));$("#toolgrid").innerHTML="";list.forEach(t=>{const b=document.createElement("button");b.className="tool"+(selected.id===t.id?" active":"");b.innerHTML="<strong>"+String(t.id).padStart(2,"0")+". "+t.name+"</strong><small>"+t.category+"</small>";b.onclick=()=>select(t);$("#toolgrid").append(b)});$("#count").textContent=list.length+" of 100 tools"}
+function select(t){selected=t;$("#group").textContent=t.category.toUpperCase();$("#toolname").textContent=t.name;$("#description").textContent="Tool "+t.id+" of 100 · Runs locally in your browser. Paste or load text, then run.";render()}
+const lines=s=>s.replace(/\r/g,"").split("\n"),stamp=(h,m,sec,ms)=>((+h*3600)+(+m*60)+(+sec)+(+(ms||0))/1000);
+function srtBlocks(s){return s.trim().replace(/^WEBVTT[^\n]*\n?/,"").split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean)}
+function run(op,s){
+const L=lines(s),trim=s.trim();
+const timeRe=/\b(\d{2}):(\d{2}):(\d{2})[,.](\d{3})\b/g;
+const stripTags=x=>x.replace(/<[^>]*>/g,"");
+switch(op){
+case"clean":return s.replace(/\r/g,"").replace(/[ \t]+/g," ").replace(/ *\n */g,"\n").replace(/\n{3,}/g,"\n\n").trim();
+case"fillers":return s.replace(/\b(um+|uh+|erm+|ah+|you know|I mean)\b[, ]*/gi,"").replace(/\s+([,.!?])/g,"$1");
+case"repeat":return s.replace(/\b([\w']+)(\s+\1\b)+/gi,"$1");
+case"blank":return L.filter(x=>x.trim()).join("\n");
+case"space":return s.replace(/\s+/g," ").trim();
+case"punctspace":return s.replace(/\s+([,.!?;:])/g,"$1").replace(/([,.!?;:])(?=\S)/g,"$1 ");
+case"sentence":return s.toLowerCase().replace(/(^|[.!?]\s+)([a-z])/g,(m,a,b)=>a+b.toUpperCase());
+case"title":return s.toLowerCase().replace(/\b([a-z])/g,x=>x.toUpperCase());
+case"upper":return s.toUpperCase();case"lower":return s.toLowerCase();
+case"words":return "Words: "+(trim.match(/[\p{L}\p{N}']+/gu)||[]).length;
+case"chars":return "Characters: "+s.length+"\nWithout spaces: "+s.replace(/\s/g,"").length;
+case"sentences":return "Sentences: "+(trim.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[]).filter(x=>x.trim()).length;
+case"paragraphs":return "Paragraphs: "+(trim?trim.split(/\n\s*\n/).length:0);
+case"reading":return "Estimated reading time: "+Math.ceil((trim.match(/\S+/g)||[]).length/200)+" minute(s) at 200 words/minute.";
+case"speaking":return "Estimated speaking time: "+Math.ceil((trim.match(/\S+/g)||[]).length/130)+" minute(s) at 130 words/minute.";
+case"longwords":return [...new Set((s.match(/[\p{L}']+/gu)||[]).filter(w=>w.length>=8))].sort((a,b)=>b.length-a.length).join("\n");
+case"frequent":return wordStats(s).slice(0,20).map(x=>x[0]+" — "+x[1]).join("\n");
+case"keywords":return wordStats(s).slice(0,12).map(x=>x[0]).join(", ");
+case"duplicates":return dupLines(L).join("\n")||"No duplicate lines found.";
+case"sortaz":return L.sort((a,b)=>a.localeCompare(b)).join("\n");case"sortza":return L.sort((a,b)=>b.localeCompare(a)).join("\n");
+case"reverse":return L.reverse().join("\n");case"number":return L.map((x,i)=>(i+1)+". "+x).join("\n");
+case"unnumber":return L.map(x=>x.replace(/^\s*\d+[.)-]\s*/,"")).join("\n");
+case"join":return L.map(x=>x.trim()).filter(Boolean).join(" ");
+case"split":return s.replace(/(.{1,80})(\s|$)/g,"$1\n").trim();
+case"spacelines":return L.join("\n\n");case"nopunct":return s.replace(/[.,!?;:'"()\[\]{}]/g,"");
+case"alnum":return s.replace(/[^\p{L}\p{N}\s]/gu,"");
+case"srttext":case"vtttext":return s.split("\n").filter(x=>x.trim()&&!/^\s*\d+\s*$/.test(x)&&!/^WEBVTT/.test(x)&&!/(-->)/.test(x)).map(stripTags).join("\n");
+case"textsrt":return L.filter(x=>x.trim()).map((x,i)=>(i+1)+"\n00:00:"+String(i*5).padStart(2,"0")+",000 --> 00:00:"+String(i*5+5).padStart(2,"0")+",000\n"+x).join("\n\n");
+case"textvtt":return "WEBVTT\n\n"+run("textsrt",s).replace(/,(\d{3})/g,".$1");
+case"srtvtt":return "WEBVTT\n\n"+s.replace(/^\d+\s*\n/gm,"").replace(/,(\d{3})/g,".$1");
+case"vttsrt":return s.replace(/^WEBVTT[^\n]*\n?/,"").replace(/\.(\d{3})/g,",$1").replace(/^(?=\d{2}:\d{2}:\d{2},)/gm,"1\n");
+case"validsrt":{let n=0,bad=[];srtBlocks(s).forEach((b,i)=>{const m=b.match(/(\d{2}:\d{2}:\d{2}[,.]\d{3})\s+-->\s+(\d{2}:\d{2}:\d{2}[,.]\d{3})/);if(!m||stamp(...m[1].replace(",",".").split(/[:.]/))>=stamp(...m[2].replace(",",".").split(/[:.]/)))bad.push(i+1);else n++});return "Valid blocks: "+n+"\nInvalid blocks: "+bad.length+(bad.length?"\nBlock numbers: "+bad.join(", "):"");}
+case"shiftplus":case"shiftminus":return s.replace(timeRe,(m,h,mi,se,ms)=>{let v=stamp(h,mi,se,ms)+(op==="shiftplus"?1:-1);v=Math.max(0,v);let H=Math.floor(v/3600),M=Math.floor(v%3600/60),S=Math.floor(v%60),MS=Math.round((v%1)*1000);return [H,M,S].map(x=>String(x).padStart(2,"0")).join(":")+"," +String(MS).padStart(3,"0")});
+case"timestamps":return [...s.matchAll(timeRe)].map(m=>m[0]).join("\n");
+case"mergeshort":return L.filter(Boolean).reduce((a,x)=>{if(a.length&&a[a.length-1].length<35)a[a.length-1]+=" "+x;else a.push(x);return a},[]).join("\n");
+case"splitcaption":return L.flatMap(x=>x.length>42?[x.slice(0,42),x.slice(42)]:[x]).join("\n");
+case"emptycaps":return srtBlocks(s).filter(b=>stripTags(b).split("\n").slice(2).join("").trim()).join("\n\n");
+case"renumber":return srtBlocks(s).map((b,i)=>b.replace(/^\d+/,String(i+1))).join("\n\n");
+case"capformat":return s.replace(/\s+/g," ").replace(/\s+([,.!?])/g,"$1").trim();
+case"speaker":return L.map(x=>x.trim()?"Speaker: "+x:x).join("\n");
+case"nospeaker":return s.replace(/^\s*[^:\n]{1,30}:\s*/gm,"");
+case"tabs":return s.replace(/\t/g,"    ");case"trimcaps":return L.map(x=>x.trim()).join("\n");
+case"capcount":return "Caption blocks: "+srtBlocks(s).length;
+case"questions":return (s.match(/[^.!?]*\?+/g)||[]).map(x=>x.trim()).join("\n");
+case"numbers":return L.filter(x=>/\d/.test(x)).join("\n");
+case"urls":return (s.match(/https?:\/\/[^\s)]+/g)||[]).join("\n");
+case"emails":return (s.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g)||[]).join("\n");
+case"hashtags":return (s.match(/#[\p{L}\p{N}_]+/gu)||[]).join("\n");
+case"mentions":return (s.match(/@[\w.]+/g)||[]).join("\n");
+case"bullets":return L.filter(x=>x.trim()).map(x=>"• "+x.trim()).join("\n");
+case"chapters":return L.filter(x=>x.trim()).map((x,i)=>String(i+1).padStart(2,"0")+" — "+x.trim().slice(0,70)).join("\n");
+case"phrases":return repeatedPhrases(s);
+case"outline":return L.filter(x=>x.trim()).slice(0,12).map((x,i)=>"# "+(i+1)+". "+x.trim().slice(0,80)).join("\n");
+case"notimes":return s.replace(/\b\d{1,2}:\d{2}(?::\d{2})?(?:[,.]\d{1,3})?\b/g,"").replace(/\s+/g," ").trim();
+case"toseconds":return s.replace(/\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b/g,(m,a,b,c)=>String(c?+a*3600+ +b*60+ +c:+a*60+ +b));
+case"tostamps":return L.map(x=>{let n=Number(x.trim());if(!Number.isFinite(n))return x;return new Date(n*1000).toISOString().slice(11,19)}).join("\n");
+case"minute":return L.map((x,i)=>"["+new Date(i*60000).toISOString().slice(11,19)+"] "+x).join("\n");
+case"first30":return L.slice(0,Math.max(1,Math.ceil(L.length/Math.max(1,(s.match(/\S+/g)||[]).length)*30))).join("\n");
+case"last30":return L.slice(-Math.max(1,Math.ceil(L.length/Math.max(1,(s.match(/\S+/g)||[]).length)*30))).join("\n");
+case"chunks":return L.reduce((a,x,i)=>{if(i%10===0)a.push([]);a[a.length-1].push(x);return a},[]).map((a,i)=>"CHUNK "+(i+1)+"\n"+a.join("\n")).join("\n\n");
+case"quotes":return (s.match(/“[^”]+”|«[^»]+»|\"[^\"]+\"/g)||[]).join("\n");
+case"shownotes":return "SHOW NOTES\n\n"+L.filter(x=>x.trim()).slice(0,15).map((x,i)=>"- "+x.trim()).join("\n");
+case"social":return trim.slice(0,260)+(trim.length>260?"…":"")+"\n\n#Kick #Highlights";
+case"csvtext":return s.replace(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/g," — ").replace(/\r/g,"");
+case"textcsv":return L.map(x=>'"'+x.replace(/"/g,'""')+'"').join("\n");
+case"markdown":return L.filter(x=>x.trim()).map(x=>"- "+x).join("\n");
+case"mdplain":return s.replace(/^\s{0,3}#{1,6}\s*/gm,"").replace(/[>*_~`]/g,"").replace(/^\s*[-+]\s+/gm,"");
+case"html":return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+case"unhtml":return s.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,"&");
+case"urlencode":return encodeURIComponent(s);case"urldecode":try{return decodeURIComponent(s)}catch{return "Invalid URL encoding."}
+case"b64encode":return btoa(unescape(encodeURIComponent(s)));case"b64decode":try{return decodeURIComponent(escape(atob(s.trim())))}catch{return "Invalid Base64 text."}
+case"redactemail":return s.replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g,"[EMAIL]");
+case"redactphone":return s.replace(/\+?\d[\d ()-]{7,}\d/g,"[PHONE]");
+case"redacturl":return s.replace(/https?:\/\/[^\s)]+/g,"[URL]");
+case"redactids":return s.replace(/\b[A-F0-9]{8,}\b/gi,"[ID]");
+case"maskuser":return s.replace(/@([\w.]+)/g,"@[USER]");
+case"profanity":return s.replace(/\b(damn|hell|shit|fuck)\b/gi,"[REDACTED]");
+case"anon":return s.replace(/\b(?:Speaker|Host|Guest)\s*\d*\b/gi,"Speaker");
+case"quotesremove":return s.replace(/“[^”]*”|«[^»]*»|\"[^\"]*\"/g,"");
+case"brackets":return s.replace(/\[[^\]]*\]/g,"");
+case"parentheses":return s.replace(/\([^)]*\)/g,"");
+case"compare":return "Input contains "+L.length+" lines and "+(s.match(/\S+/g)||[]).length+" words.\n\nFor a second version, paste it after a line containing === and run again.\n"+(s.includes("===")?"\n"+s.split("===").map((v,i)=>"Section "+(i+1)+": "+v.trim().length+" characters").join("\n"):"");
+case"punctcheck":return L.filter(x=>x.trim()&&!/[.!?…][\"')\]]?$/.test(x.trim())).join("\n")||"No obvious missing sentence-ending punctuation.";
+case"caps":return L.filter(x=>x.length>3&&x===x.toUpperCase()&&/[A-Z]/.test(x)).join("\n")||"No all-caps lines found.";
+case"longsent":return (s.match(/[^.!?]+[.!?]+/g)||[]).filter(x=>x.trim().split(/\s+/).length>25).join("\n")||"No sentences over 25 words.";
+case"repeatsent":return dupLines((s.match(/[^.!?]+[.!?]+/g)||[]).map(x=>x.trim())).join("\n")||"No repeated sentences found.";
+case"cps":return "Approximate characters per subtitle line (excluding timestamps): "+(s.replace(/\d{2}:\d{2}:\d{2}[,.]\d{3}.*-->.*\n/g,"").length/Math.max(1,srtBlocks(s).length)).toFixed(1);
+case"speed":return "Reading speed guide: aim for about 15–20 characters/second. This tool reports a rough average; verify actual cue durations.";
+case"order":{let a=[...s.matchAll(/(\d{2}):(\d{2}):(\d{2})[,.](\d{3})/g)].map(m=>stamp(m[1],m[2],m[3],m[4]));return a.every((v,i)=>!i||v>=a[i-1])?"Timestamp order: OK":"Timestamp order: possible out-of-order timestamps found."}
+case"gaps":return "Potential gaps require cue-duration analysis. Detected "+srtBlocks(s).length+" subtitle blocks. Review long pauses manually; no audio is uploaded.";
+case"report":return ["TRANSCRIPT QUALITY REPORT","Words: "+(s.match(/\S+/g)||[]).length,"Characters: "+s.length,"Lines: "+L.length,"Blank lines: "+L.filter(x=>!x.trim()).length,"Repeated lines: "+dupLines(L).length,"Long sentences (>25 words): "+((s.match(/[^.!?]+[.!?]+/g)||[]).filter(x=>x.trim().split(/\s+/).length>25).length)].join("\n");
+default:return "This tool is not available yet.";
+}}
+function wordStats(s){const stop=new Set("the a an and or but to of in on for with is are was were be been it this that i you he she they we a".split(" "));const m=s.toLowerCase().match(/[\p{L}']{3,}/gu)||[];const c={};m.forEach(w=>{if(!stop.has(w))c[w]=(c[w]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])}
+function dupLines(a){const seen=new Set(),dups=new Set();a.forEach(x=>{const k=x.trim().toLowerCase();if(k&&seen.has(k))dups.add(x.trim());seen.add(k)});return [...dups]}
+function repeatedPhrases(s){const w=s.toLowerCase().match(/[\p{L}']+/gu)||[],c={};for(let n=2;n<=4;n++)for(let i=0;i<=w.length-n;i++){let p=w.slice(i,i+n).join(" ");if(p.length>8)c[p]=(c[p]||0)+1}return Object.entries(c).filter(x=>x[1]>1).sort((a,b)=>b[1]-a[1]).slice(0,20).map(x=>x[0]+" ("+x[1]+")").join("\n")||"No repeated phrases found."}
+$("#run").onclick=()=>{try{$("#output").value=run(selected.op,$("#input").value);$("#status").textContent="Completed locally: "+selected.name}catch(e){$("#status").textContent="Could not run tool: "+e.message}};
+$("#clear").onclick=()=>{$("#input").value="";$("#output").value="";$("#status").textContent="Cleared."};
+$("#load").onclick=()=>$("#file").click();
+$("#file").onchange=async e=>{const f=e.target.files[0];if(f){$("#input").value=await f.text();$("#status").textContent="Loaded "+f.name}};
+$("#copy").onclick=async()=>{if(!$("#output").value)return;try{await navigator.clipboard.writeText($("#output").value);$("#status").textContent="Copied output."}catch{$("#status").textContent="Clipboard unavailable; select and copy the output manually."}};
+$("#download").onclick=()=>{const blob=new Blob([$("#output").value],{type:"text/plain;charset=utf-8"}),u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="kick-tool-result.txt";a.click();URL.revokeObjectURL(u)};
+$("#search").oninput=render;$("#category").onchange=render;
+if(tools.length!==100)throw new Error("Tool catalog must contain exactly 100 tools.");
+select(tools[0]);
+</script></body></html>
