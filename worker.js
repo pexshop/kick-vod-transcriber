@@ -1,49 +1,79 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const cors = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
-    if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      });
+    }
+
     if (url.pathname === "/api/health") {
       return Response.json({
         ok: true,
         service: "kick-vod-transcriber",
         extractorConfigured: Boolean(env.EXTRACTOR_URL && env.EXTRACTOR_TOKEN),
-      }, { headers: cors });
+        transcription: "local browser model; no paid API",
+      });
     }
-    if (url.pathname === "/api/transcribe" && request.method === "POST") {
+
+    if (url.pathname === "/api/audio" && request.method === "POST") {
       if (!env.EXTRACTOR_URL || !env.EXTRACTOR_TOKEN) {
-        return Response.json({ error: "The extraction service is not fully configured. Set EXTRACTOR_URL and the EXTRACTOR_TOKEN secret in Worker settings." }, { status: 503, headers: cors });
+        return Response.json(
+          { error: "Audio extraction is not configured. Set EXTRACTOR_URL and EXTRACTOR_TOKEN in Worker settings." },
+          { status: 503 },
+        );
       }
+
       let body;
-      try { body = await request.json(); } catch {
-        return Response.json({ error: "Invalid JSON body." }, { status: 400, headers: cors });
-      }
-      if (typeof body.url !== "string" || !/^https?:\/\/(www\.)?kick\.com\//i.test(body.url)) {
-        return Response.json({ error: "Enter a valid public Kick VOD URL." }, { status: 400, headers: cors });
-      }
       try {
-        const extractorUrl = new URL("/transcribe", env.EXTRACTOR_URL);
-        const upstream = await fetch(extractorUrl, {
+        body = await request.json();
+      } catch {
+        return Response.json({ error: "Invalid JSON body." }, { status: 400 });
+      }
+
+      if (typeof body.url !== "string" || !/^https?:\\/\\/(www\\.)?kick\\.com\\//i.test(body.url)) {
+        return Response.json({ error: "Enter a valid public Kick VOD URL." }, { status: 400 });
+      }
+
+      try {
+        const upstreamUrl = new URL("/audio", env.EXTRACTOR_URL);
+        const upstream = await fetch(upstreamUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${env.EXTRACTOR_TOKEN}`,
           },
-          body: JSON.stringify({ url: body.url, translate_to: body.translate_to || null }),
+          body: JSON.stringify({ url: body.url }),
           signal: AbortSignal.timeout(1000 * 60 * 10),
         });
-        const data = await upstream.json().catch(() => ({ error: "Extractor returned an invalid response." }));
-        if (data.detail && !data.error) data.error = data.detail;
-        return Response.json(data, { status: upstream.status, headers: cors });
+
+        if (!upstream.ok) {
+          const error = await upstream.json().catch(() => ({}));
+          return Response.json(
+            { error: error.detail || error.error || "Audio extraction failed." },
+            { status: upstream.status },
+          );
+        }
+
+        const headers = new Headers({
+          "Content-Type": upstream.headers.get("Content-Type") || "audio/mpeg",
+          "Content-Disposition": 'attachment; filename="kick-vod-audio.mp3"',
+          "Cache-Control": "no-store",
+        });
+        return new Response(upstream.body, { status: 200, headers });
       } catch {
-        return Response.json({ error: "Could not reach the extraction service or the request timed out. Check the Render service status and logs." }, { status: 502, headers: cors });
+        return Response.json(
+          { error: "Could not reach the free extraction service. It may be waking up; please retry in a minute." },
+          { status: 502 },
+        );
       }
     }
+
     if (env.ASSETS) return env.ASSETS.fetch(request);
-    return new Response("Kick VOD Transcriber API is running.", { headers: cors });
+    return new Response("Kick VOD Transcriber is running.");
   },
 };
