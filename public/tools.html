@@ -139,7 +139,7 @@ case"cps":return "Approximate characters per subtitle line (excluding timestamps
 case"speed":return "Reading speed guide: aim for about 15–20 characters/second. This tool reports a rough average; verify actual cue durations.";
 case"order":{let a=[...s.matchAll(/(\d{2}):(\d{2}):(\d{2})[,.](\d{3})/g)].map(m=>stamp(m[1],m[2],m[3],m[4]));return a.every((v,i)=>!i||v>=a[i-1])?"Timestamp order: OK":"Timestamp order: possible out-of-order timestamps found."}
 case"gaps":return "Potential gaps require cue-duration analysis. Detected "+srtBlocks(s).length+" subtitle blocks. Review long pauses manually; no audio is uploaded.";
-case"report":return ["TRANSCRIPT QUALITY REPORT","Words: "+(s.match(/\S+/g)||[]).length,"Characters: "+s.length,"Lines: "+L.length,"Blank lines: "+L.filter(x=>!x.trim()).length,"Repeated lines: "+dupLines(L).length,"Long sentences (>25 words): "+((s.match(/[^.!?]+[.!?]+/g)||[]).filter(x=>x.trim().split(/\s+/).length>25).length)].join("\n");
+case"report":return ["TRANSCRIPT QUALITY REPORT","Words: "+(s.match(/\S+/g)||[]).length,"Characters: "+s.length,"Lines: "+L.length,"Blank lines: "+L.filter(x=>!x.trim()).length,"Repeated lines: "+dupLines(L).length,"Long sentences (>25 words): "+((s.match(/[^.!?]+[.!?]+/g)||[]).filter(x=>x.trim().split(/\s+/).length>25).length))].join("\n");
 default:return "This tool is not available yet.";
 }}
 function wordStats(s){const stop=new Set("the a an and or but to of in on for with is are was were be been it this that i you he she they we a".split(" "));const m=s.toLowerCase().match(/[\p{L}']{3,}/gu)||[];const c={};m.forEach(w=>{if(!stop.has(w))c[w]=(c[w]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])}
