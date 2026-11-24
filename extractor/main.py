@@ -15,7 +15,7 @@ class Job(BaseModel):
     translate_to: str | None = None
 
 def check_auth(authorization: str | None):
-    if TOKEN and authorization != f"Bearer {TOKEN}":
+    if not TOKEN:\n        raise HTTPException(status_code=503, detail="EXTRACTOR_TOKEN is not configured.")\n    if authorization != f"Bearer {TOKEN}":
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 @app.get("/health")
@@ -26,7 +26,7 @@ def health():
 def transcribe(job: Job, authorization: str | None = Header(default=None)):
     check_auth(authorization)
     url = str(job.url)
-    if not re.match(r"^https?://(www\\.)?kick\\.com/", url, re.I):
+    if not re.match(r"^https?://(www\.)?kick\.com/", url, re.I):
         raise HTTPException(status_code=400, detail="Only Kick URLs are accepted.")
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=503, detail="OPENAI_API_KEY is not configured.")
