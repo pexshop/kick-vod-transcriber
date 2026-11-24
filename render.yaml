@@ -7,9 +7,7 @@ services:
     dockerfilePath: ./extractor/Dockerfile
     healthCheckPath: /health
     envVars:
-      - key: OPENAI_API_KEY
-        sync: false
       - key: EXTRACTOR_TOKEN
         sync: false
       - key: MAX_DURATION_SECONDS
-        value: "14400"
+        value: "1800"
