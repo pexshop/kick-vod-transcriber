@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kick-vod-extractor
+    runtime: docker
+    plan: free
+    dockerContext: ./extractor
+    dockerfilePath: ./extractor/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: EXTRACTOR_TOKEN
+        sync: false
+      - key: MAX_DURATION_SECONDS
+        value: "14400"
