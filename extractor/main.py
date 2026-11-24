@@ -36,7 +36,7 @@ def health():
 def extract_audio(job: AudioJob, authorization: str | None = Header(default=None)):
     check_auth(authorization)
     url = str(job.url)
-    if not re.match(r"^https?://(www\\.)?kick\\.com/", url, re.I):
+    if not re.match(r"^https?://(www\.)?kick\.com/", url, re.I):
         raise HTTPException(status_code=400, detail="Only public Kick URLs are accepted.")
 
     temp_dir = tempfile.mkdtemp(prefix="kick-audio-")
