@@ -35,7 +35,7 @@ export default {
         return Response.json({ error: "Invalid JSON body." }, { status: 400 });
       }
 
-      if (typeof body.url !== "string" || !/^https?:\\/\\/(www\\.)?kick\\.com\\//i.test(body.url)) {
+      if (typeof body.url !== "string" || !/^https?:\/\/(www\.)?kick\.com\//i.test(body.url)) {
         return Response.json({ error: "Enter a valid public Kick VOD URL." }, { status: 400 });
       }
 
@@ -45,7 +45,7 @@ export default {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${env.EXTRACTOR_TOKEN}`,
+            "Authorization": \`Bearer \${env.EXTRACTOR_TOKEN}\`,
           },
           body: JSON.stringify({ url: body.url }),
           signal: AbortSignal.timeout(1000 * 60 * 10),
