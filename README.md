@@ -4,58 +4,58 @@ An English-language web app for submitting a public Kick VOD URL and receiving a
 
 ## Architecture
 
-- **Cloudflare Worker** serves the static UI and proxies requests to the extractor.
-- **Extractor API** runs separately in a container because yt-dlp and FFmpeg are not suitable for running inside a standard Cloudflare Worker.
-- **OpenAI API** provides speech transcription and optional translation/summary.
+- **Cloudflare Worker** serves the static UI and forwards requests.
+- **Render Web Service** runs the Docker-based extractor (Python, yt-dlp, FFmpeg).
+- **OpenAI API** provides speech transcription, optional translation, and summaries.
 
-This repository is a starter implementation. A successful deployment requires a separately hosted extractor service and configured secrets.
+The extractor is deployed separately from the Worker. The app is not ready for public use until both services and their secrets are configured.
 
-## Deploy the extractor
+## Deploy the extractor on Render (free plan)
 
-1. Deploy the `extractor/` directory as a Docker container on a service that supports persistent execution and outbound network access.
-2. Set `OPENAI_API_KEY` in the extractor environment. Never commit API keys.
-3. Set a strong `EXTRACTOR_TOKEN` in the extractor environment.
-4. Expose the service over HTTPS and confirm `GET /health` responds.
+1. Push this repository to GitHub (it is already named `pexshop/kick-vod-transcriber`).
+2. Sign in to Render and choose **New → Blueprint**.
+3. Connect this GitHub repository and let Render detect `render.yaml`.
+4. In the Blueprint environment-variable prompt, enter your OpenAI API key for `OPENAI_API_KEY` and create a long random value for `EXTRACTOR_TOKEN`. Use the same token later in Cloudflare. Never commit either secret or paste them into public files.
+5. Deploy the Blueprint. Wait for the service to become **Live**.
+6. Copy the service's public HTTPS URL (for example, `https://your-service.onrender.com`). Test `https://your-service.onrender.com/health`; it should return JSON with `ok: true`.
 
-Example:
+Render's free service may sleep when idle and take time to wake up. Free resources and request limits can also make long VODs or lengthy transcriptions fail. This is a starter deployment, not a guaranteed always-on production service.
 
-```sh
-docker build -t kick-vod-extractor ./extractor
-docker run -p 8080:8080 -e OPENAI_API_KEY=YOUR_KEY -e EXTRACTOR_TOKEN=YOUR_LONG_RANDOM_TOKEN kick-vod-extractor
-```
+## Connect the extractor to Cloudflare Worker
+
+In Cloudflare Dashboard:
+
+1. Open **Workers & Pages → kick-vod-transcriber → Settings → Variables and Secrets**.
+2. Add a plain-text variable named `EXTRACTOR_URL` and set it to the Render service base URL, without adding `/transcribe`.
+3. Add a secret named `EXTRACTOR_TOKEN` and paste the exact same token used in Render.
+4. Save and redeploy the Worker if the dashboard requests it.
+
+Then open `https://YOUR-WORKER-DOMAIN/api/health`. The response should show `"extractorConfigured": true`.
 
 ## Deploy the Cloudflare Worker
 
-Install dependencies and deploy:
+Connect the repository to Cloudflare Workers Builds, or deploy from a local environment with:
 
 ```sh
 npm install
-npx wrangler secret put EXTRACTOR_TOKEN
 npx wrangler deploy
 ```
 
-Set the extractor URL as a Worker variable:
-
-```sh
-npx wrangler deploy
-```
-
-In the Cloudflare Worker settings, add variable `EXTRACTOR_URL` with the HTTPS base URL of the deployed extractor. Add secret `EXTRACTOR_TOKEN` with the same token configured on the extractor.
+The static UI is in `public/`. The API health endpoint is `/api/health`.
 
 ## Local development
 
 ```sh
 npm install
 npx wrangler dev
-``
-
-The UI is served from `public/`. The health endpoint is `/api/health`.
+```
 
 ## Limitations and responsible use
 
-- Only submit public VODs that you are authorized to access and process.
+- Only submit public VODs you are authorized to access and process.
 - Private, login-gated, DRM-protected, deleted, or otherwise restricted content is unsupported. Do not attempt to bypass access controls.
 - Kick may change its delivery mechanisms; yt-dlp support is not guaranteed for every VOD.
-- The starter currently limits extracted audio to 24 MB and VOD duration to four hours. Long recordings need chunked audio processing before production use.
+- The starter currently limits VOD duration to four hours and extracted audio to 24 MB. Longer audio requires chunked transcription.
+- Render free services can sleep while idle. Long-running requests may time out depending on platform limits.
 - Review Kick's terms and applicable copyright/privacy laws before deployment.
 - Add rate limiting, job queues, storage cleanup, and abuse prevention before exposing this service publicly.
