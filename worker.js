@@ -25,6 +25,7 @@ export default {
           signal: AbortSignal.timeout(1000 * 60 * 10),
         });
         const data = await upstream.json().catch(() => ({ error: "Extractor returned an invalid response." }));
+        if (data.detail && !data.error) data.error = data.detail;
         return Response.json(data, { status: upstream.status, headers: cors });
       } catch {
         return Response.json({ error: "Could not reach the extraction service. Check its deployment and logs." }, { status: 502, headers: cors });
