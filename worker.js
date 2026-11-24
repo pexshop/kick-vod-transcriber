@@ -8,19 +8,31 @@ export default {
     };
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
     if (url.pathname === "/api/health") {
-      return Response.json({ ok: true, service: "kick-vod-transcriber", extractorConfigured: Boolean(env.EXTRACTOR_URL) }, { headers: cors });
+      return Response.json({
+        ok: true,
+        service: "kick-vod-transcriber",
+        extractorConfigured: Boolean(env.EXTRACTOR_URL && env.EXTRACTOR_TOKEN),
+      }, { headers: cors });
     }
     if (url.pathname === "/api/transcribe" && request.method === "POST") {
-      if (!env.EXTRACTOR_URL) return Response.json({ error: "The extraction service is not configured yet. Deploy the extractor and set EXTRACTOR_URL." }, { status: 503, headers: cors });
+      if (!env.EXTRACTOR_URL || !env.EXTRACTOR_TOKEN) {
+        return Response.json({ error: "The extraction service is not fully configured. Set EXTRACTOR_URL and the EXTRACTOR_TOKEN secret in Worker settings." }, { status: 503, headers: cors });
+      }
       let body;
-      try { body = await request.json(); } catch { return Response.json({ error: "Invalid JSON body." }, { status: 400, headers: cors }); }
+      try { body = await request.json(); } catch {
+        return Response.json({ error: "Invalid JSON body." }, { status: 400, headers: cors });
+      }
       if (typeof body.url !== "string" || !/^https?:\/\/(www\.)?kick\.com\//i.test(body.url)) {
         return Response.json({ error: "Enter a valid public Kick VOD URL." }, { status: 400, headers: cors });
       }
       try {
-        const upstream = await fetch(new URL("/transcribe", env.EXTRACTOR_URL), {
+        const extractorUrl = new URL("/transcribe", env.EXTRACTOR_URL);
+        const upstream = await fetch(extractorUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...(env.EXTRACTOR_TOKEN ? { "Authorization": `Bearer ${env.EXTRACTOR_TOKEN}` } : {}) },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${env.EXTRACTOR_TOKEN}`,
+          },
           body: JSON.stringify({ url: body.url, translate_to: body.translate_to || null }),
           signal: AbortSignal.timeout(1000 * 60 * 10),
         });
@@ -28,7 +40,7 @@ export default {
         if (data.detail && !data.error) data.error = data.detail;
         return Response.json(data, { status: upstream.status, headers: cors });
       } catch {
-        return Response.json({ error: "Could not reach the extraction service. Check its deployment and logs." }, { status: 502, headers: cors });
+        return Response.json({ error: "Could not reach the extraction service or the request timed out. Check the Render service status and logs." }, { status: 502, headers: cors });
       }
     }
     if (env.ASSETS) return env.ASSETS.fetch(request);
